@@ -8,12 +8,6 @@ variable "tag" {
   description = "the tag name used on the EC2 or RDS instance to contain the schedule json string for the instance."
 }
 
-variable "schedule_tag_force" {
-  type        = string
-  default     = "false"
-  description = "Whether to force the EC2 or RDS instance to have the default schedule tag is no schedule tag exists for the instance."
-}
-
 variable "permissions_boundary" {
   type 		  = string
   default 	  = ""
@@ -31,7 +25,7 @@ variable "default" {
 }
 
 variable "time" {
-  default     = "gmt"
+  default     = "America/Denver"
   description = "timezone to use for scheduler. Can be 'local', 'gmt' or an Olson timezone from https://gist.github.com/ykessler/3349954. default is 'gmt'. local time is for the AWS region."
 }
 

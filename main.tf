@@ -123,7 +123,6 @@ resource "aws_lambda_function" "scheduler_lambda" {
   environment {
     variables = {
       TAG                = var.tag
-      SCHEDULE_TAG_FORCE = var.schedule_tag_force
       EXCLUDE            = var.exclude
       DEFAULT            = var.default
       TIME               = var.time

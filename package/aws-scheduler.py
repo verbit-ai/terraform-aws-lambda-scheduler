@@ -13,17 +13,31 @@ logger.setLevel(logging.INFO)
 
 aws_region = None
 
-create_schedule_tag_force = os.getenv('SCHEDULE_TAG_FORCE', 'False')
-create_schedule_tag_force = create_schedule_tag_force.capitalize()
-logger.info("create_schedule_tag_force is %s." % create_schedule_tag_force)
-
 rds_schedule = os.getenv('RDS_SCHEDULE', 'True')
 rds_schedule = rds_schedule.capitalize()
 logger.info("rds_schedule is %s." % rds_schedule)
 
+rds_schedule_default = os.getenv('RDS_SCHEDULE_DEFAULT', '''{\
+"mon": {"start": 7, "stop": 19},\
+"tue": {"start": 7, "stop": 19},\
+"wed": {"start": 7, "stop": 19},\
+"thu": {"start": 7, "stop": 19},\
+"fri": {"start": 7, "stop": 19}\
+}''')
+
 ec2_schedule = os.getenv('EC2_SCHEDULE', 'True')
 ec2_schedule = ec2_schedule.capitalize()
 logger.info("ec2_schedule is %s." % ec2_schedule)
+
+ec2_schedule_default = os.getenv('EC2_SCHEDULE_DEFAULT', '''{\
+"mon": {"start": [7], "stop": [19]},\
+"tue": {"start": [7], "stop": [19]},\
+"wed": {"start": [7], "stop": [19]},\
+"thu": {"start": [7], "stop": [19]},\
+"fri": {"start": [7], "stop": [19]}\
+}''')
+
+
 debugmode = False
 
 
@@ -40,42 +54,6 @@ def init():
 def debugout(module, data):
     if debugmode:
         logger.info("DEBUG %s : %s" % (module, data))
-
-#
-# Add default 'schedule' tag to instance.
-# (Only if instance.id not excluded and create_schedule_tag_force variable is True.
-#
-
-
-def create_schedule_tag(instance):
-    exclude_list = os.environ.get('EXCLUDE').split(',')
-
-    autoscaling = False
-    for tag in instance.tags:
-        if 'aws:autoscaling:groupName' in tag['Key']:
-            autoscaling = True
-
-    if (create_schedule_tag_force == 'True') and (instance.id not in exclude_list) and (not autoscaling):
-        try:
-            schedule_tag = os.getenv('TAG', 'schedule')
-            tag_value = os.getenv(
-                'DEFAULT', '{"mon": {"start": [7], "stop": [19]},"tue": {"start": [7], "stop": [19]},"wed": {"start": [9, 22], "stop": [19]},"thu": {"start": [7], "stop": [2,19]}, "fri": {"start": [7], "stop": [19]}, "sat": {"start": [22]}, "sun": {"stop": [7]}}')
-            logger.info("About to create %s tag on EC2 instance %s with value: %s" % (schedule_tag, instance.id, tag_value))
-            tags = [{
-                "Key": schedule_tag,
-                "Value": tag_value
-            }]
-            instance.create_tags(Tags=tags)
-        except Exception as e:
-            logger.error("Error adding Tag to EC2 instance: %s" % e)
-    else:
-        if (autoscaling):
-            logger.info("Ignoring EC2 instance %s. It is part of an auto scaling group" % instance.id)
-        else:
-            logger.info(
-                "No 'schedule' tag found on EC2 instance %s. Use create_schedule_tag_force option to create the tag automagically" % instance.id)
-
-# state = start | stop
 
 
 def checkdate(data, state, day, hh):
@@ -192,8 +170,6 @@ def check():
     started = []
     stopped = []
 
-    schedule_tag = os.getenv('TAG', 'schedule')
-    logger.info("-----> schedule tag is called \"%s\"", schedule_tag)
     if not instances:
         logger.error('Unable to find any EC2 Instances, please check configuration')
 
@@ -201,14 +177,8 @@ def check():
         logger.info("-----> Evaluating EC2 instance \"%s\" state %s" % (instance.id, instance.state["Name"]))
 
         try:
-            data = "{}"
-            for tag in instance.tags:
-                if schedule_tag in tag['Key']:
-                    data = tag['Value']
-                    break
-            else:
-                # 'schedule' tag not found, create if appropriate.
-                create_schedule_tag(instance)
+            # ignore tags on EC2
+            data = ec2_schedule_default
 
             try:
                 if checkdate(data, 'start', day, hh) and instance.state["Name"] != 'running':
@@ -242,48 +212,6 @@ def rds_init():
     global rds
     rds = boto3.client('rds', region_name=aws_region)
     logger.info("-----> Connected rds to region \"%s\"", aws_region)
-
-#
-# Add default 'schedule' tag to instance.
-# (Only if instance.id not excluded and create_schedule_tag_force variable is True.
-#
-
-
-def rds_create_schedule_tag(instance, object_type):
-    exclude_list = os.environ.get('EXCLUDE').split(',')
-
-    if (create_schedule_tag_force == 'True') and (instance['DB'+object_type+'Identifier'] not in exclude_list):
-        try:
-            schedule_tag = os.getenv('TAG', 'schedule')
-            tag_default = os.getenv('DEFAULT', '''{\
-"mon": {"start": 7, "stop": 20},\
-"tue": {"start": 7, "stop": 20},\
-"wed": {"start": 7, "stop": 20},\
-"thu": {"start": 7, "stop": 20},\
-"fri": {"start": 7, "stop": 20}}\
-''')
-            logger.info("json tag_value: %s" % tag_default)
-
-            if len(tag_default) > 1 and tag_default[0] == '{':
-                tag = json.loads(tag_default)
-                tag_dict = flattenjson(tag, "_")
-                tag_value = dict_to_string(tag_dict)
-            else:
-                # use default string without convert to JSON
-                tag_value = tag_default
-
-            logger.info("About to create %s tag on RDS instance %s with value: %s" %
-                        (schedule_tag, instance['DBInstanceIdentifier'], tag_value))
-            tags = [{
-                "Key": schedule_tag,
-                "Value": tag_value
-            }]
-            rds.add_tags_to_resource(ResourceName=instance['DB'+object_type+'Arn'], Tags=tags)
-        except Exception as e:
-            logger.error("Error adding Tag to RDS instance: %s" % e)
-    else:
-        logger.info("No 'schedule' tag found on RDS instance %s. Use create_schedule_tag_force option to create the tag automagically" %
-                    instance['DB'+object_type+'Identifier'])
 
 
 def flattenjson(b, delim):
@@ -360,8 +288,6 @@ def rds_loop(rds_objects, hh, day, object_type):
     started = []
     stopped = []
 
-    schedule_tag = os.getenv('TAG', 'schedule')
-    logger.info("-----> schedule tag is called \"%s\"", schedule_tag)
     for instance in rds_objects['DB'+object_type+'s']:
         if 'DBInstanceStatus' not in instance:
             instance['DBInstanceStatus'] = ''
@@ -373,13 +299,8 @@ def rds_loop(rds_objects, hh, day, object_type):
         response = rds.list_tags_for_resource(ResourceName=instance['DB'+object_type+'Arn'])
         taglist = response['TagList']
         try:
-            data = ""
-            for tag in taglist:
-                if schedule_tag in tag['Key']:
-                    data = tag['Value']
-                    break
-            else:
-                rds_create_schedule_tag(instance, object_type)
+            # ignore tags on RDS
+            data = rds_schedule_default
 
             try:
                 # Convert the start/stop hour into a list, in case of multiple values
