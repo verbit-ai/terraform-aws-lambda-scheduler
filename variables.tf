@@ -20,8 +20,13 @@ variable "exclude" {
 }
 
 variable "default" {
-  default     = "{\"mon\": {\"start\": 7, \"stop\": 20},\"tue\": {\"start\": 7, \"stop\": 20},\"wed\": {\"start\": 7, \"stop\": 20},\"thu\": {\"start\": 7, \"stop\": 20}, \"fri\": {\"start\": 7, \"stop\": 20}}"
+  default     = "{\"mon\": {\"start\": 8, \"stop\": 20},\"tue\": {\"start\": 8, \"stop\": 20},\"wed\": {\"start\": 8, \"stop\": 20},\"thu\": {\"start\": 8, \"stop\": 20}, \"fri\": {\"start\": 8, \"stop\": 20}}"
   description = "the default schedule tag containing json schedule information to add to instance when schedule_tag_force set to true."
+}
+
+variable "debugmode" {
+  default = "False"
+  description = "set to true to enable debug mode. This will log the schedule json to cloudwatch logs."
 }
 
 variable "time" {

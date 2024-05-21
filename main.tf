@@ -128,6 +128,7 @@ resource "aws_lambda_function" "scheduler_lambda" {
       TIME               = var.time
       RDS_SCHEDULE       = var.rds_schedule
       EC2_SCHEDULE       = var.ec2_schedule
+      DEBUGMODE          = var.debugmode
     }
   }
 }

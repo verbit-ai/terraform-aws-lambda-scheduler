@@ -18,11 +18,11 @@ rds_schedule = rds_schedule.capitalize()
 logger.info("rds_schedule is %s." % rds_schedule)
 
 rds_schedule_default = os.getenv('RDS_SCHEDULE_DEFAULT', '''{\
-"mon": {"start": 7, "stop": 19},\
-"tue": {"start": 7, "stop": 19},\
-"wed": {"start": 7, "stop": 19},\
-"thu": {"start": 7, "stop": 19},\
-"fri": {"start": 7, "stop": 19}\
+"mon": {"start": 8, "stop": 20},\
+"tue": {"start": 8, "stop": 20},\
+"wed": {"start": 8, "stop": 20},\
+"thu": {"start": 8, "stop": 20},\
+"fri": {"start": 8, "stop": 20}\
 }''')
 
 ec2_schedule = os.getenv('EC2_SCHEDULE', 'True')
@@ -30,15 +30,15 @@ ec2_schedule = ec2_schedule.capitalize()
 logger.info("ec2_schedule is %s." % ec2_schedule)
 
 ec2_schedule_default = os.getenv('EC2_SCHEDULE_DEFAULT', '''{\
-"mon": {"start": [7], "stop": [19]},\
-"tue": {"start": [7], "stop": [19]},\
-"wed": {"start": [7], "stop": [19]},\
-"thu": {"start": [7], "stop": [19]},\
-"fri": {"start": [7], "stop": [19]}\
+"mon": {"start": [8], "stop": [20]},\
+"tue": {"start": [8], "stop": [20]},\
+"wed": {"start": [8], "stop": [20]},\
+"thu": {"start": [8], "stop": [20]},\
+"fri": {"start": [8], "stop": [20]}\
 }''')
 
 
-debugmode = False
+debugmode = os.getenv('DEBUGMODE', 'False')
 
 
 def init():
