@@ -15,9 +15,9 @@ resource "aws_cloudwatch_event_target" "check-scheduler-event-lambda-target" {
 
 # IAM Role for Lambda function
 resource "aws_iam_role" "scheduler_lambda" {
-  name               = "${var.resource_name_prefix}scheduler_lambda"
+  name                 = "${var.resource_name_prefix}scheduler_lambda"
   permissions_boundary = var.permissions_boundary != "" ? var.permissions_boundary : ""
-  assume_role_policy = <<EOF
+  assume_role_policy   = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -122,13 +122,14 @@ resource "aws_lambda_function" "scheduler_lambda" {
   }
   environment {
     variables = {
-      TAG                = var.tag
-      EXCLUDE            = var.exclude
-      DEFAULT            = var.default
-      TIME               = var.time
-      RDS_SCHEDULE       = var.rds_schedule
-      EC2_SCHEDULE       = var.ec2_schedule
-      DEBUGMODE          = var.debugmode
+      TAG                    = var.tag
+      EXCLUDE                = var.exclude
+      TIME                   = var.time
+      RDS_SCHEDULING_ENABLED = var.rds_scheduling_enabled
+      EC2_SCHEDULING_ENABLED = var.ec2_scheduling_enabled
+      RDS_SCHEDULE           = var.rds_schedule
+      EC2_SCHEDULE           = var.ec2_schedule
+      DEBUGMODE              = var.debugmode
     }
   }
 }

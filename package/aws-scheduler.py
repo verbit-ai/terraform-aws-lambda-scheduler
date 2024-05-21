@@ -13,32 +13,32 @@ logger.setLevel(logging.INFO)
 
 aws_region = None
 
-rds_schedule = os.getenv('RDS_SCHEDULE', 'True')
-rds_schedule = rds_schedule.capitalize()
-logger.info("rds_schedule is %s." % rds_schedule)
+rds_scheduling_enabled = os.getenv('RDS_SCHEDULING_ENABLED', 'True')
+rds_scheduling_enabled = rds_scheduling_enabled.capitalize()
+logger.info("rds_schedule is %s." % rds_scheduling_enabled)
 
-rds_schedule_default = os.getenv('RDS_SCHEDULE_DEFAULT', '''{\
-"mon": {"start": 8, "stop": 20},\
-"tue": {"start": 8, "stop": 20},\
-"wed": {"start": 8, "stop": 20},\
-"thu": {"start": 8, "stop": 20},\
-"fri": {"start": 8, "stop": 20}\
+rds_schedule = os.getenv('RDS_SCHEDULE', '''{\
+"mon": {"start": 5, "stop": 19},\
+"tue": {"start": 5, "stop": 19},\
+"wed": {"start": 5, "stop": 19},\
+"thu": {"start": 5, "stop": 19},\
+"fri": {"start": 5, "stop": 19}\
 }''')
 
-ec2_schedule = os.getenv('EC2_SCHEDULE', 'True')
-ec2_schedule = ec2_schedule.capitalize()
-logger.info("ec2_schedule is %s." % ec2_schedule)
+ec2_scheduling_enabled = os.getenv('EC2_SCHEDULING_ENABlED', 'True')
+ec2_scheduling_enabled = ec2_scheduling_enabled.capitalize()
+logger.info("ec2_schedule is %s." % ec2_scheduling_enabled)
 
-ec2_schedule_default = os.getenv('EC2_SCHEDULE_DEFAULT', '''{\
-"mon": {"start": [8], "stop": [20]},\
-"tue": {"start": [8], "stop": [20]},\
-"wed": {"start": [8], "stop": [20]},\
-"thu": {"start": [8], "stop": [20]},\
-"fri": {"start": [8], "stop": [20]}\
+ec2_schedule = os.getenv('EC2_SCHEDULE', '''{\
+"mon": {"start": 6, "stop": 19},\
+"tue": {"start": 6, "stop": 19},\
+"wed": {"start": 6, "stop": 19},\
+"thu": {"start": 6, "stop": 19},\
+"fri": {"start": 6, "stop": 19}\
 }''')
 
 
-debugmode = os.getenv('DEBUGMODE', 'False')
+debugmode = os.getenv('DEBUGMODE', 'False') == 'True'
 
 
 def init():
@@ -178,7 +178,7 @@ def check():
 
         try:
             # ignore tags on EC2
-            data = ec2_schedule_default
+            data = ec2_schedule
 
             try:
                 if checkdate(data, 'start', day, hh) and instance.state["Name"] != 'running':
@@ -300,7 +300,7 @@ def rds_loop(rds_objects, hh, day, object_type):
         taglist = response['TagList']
         try:
             # ignore tags on RDS
-            data = rds_schedule_default
+            data = rds_schedule
 
             try:
                 # Convert the start/stop hour into a list, in case of multiple values
@@ -334,11 +334,11 @@ def rds_loop(rds_objects, hh, day, object_type):
 # Main function. Entrypoint for Lambda
 def handler(event, context):
 
-    if (ec2_schedule == 'True'):
+    if (ec2_scheduling_enabled == 'True'):
         init()
         check()
 
-    if (rds_schedule == 'True'):
+    if (rds_scheduling_enabled == 'True'):
         rds_init()
         rds_check()
 

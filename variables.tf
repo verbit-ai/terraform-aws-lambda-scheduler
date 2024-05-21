@@ -19,8 +19,13 @@ variable "exclude" {
   description = "common separated list of EC2 and RDS instance ids to exclude from scheduling."
 }
 
-variable "default" {
-  default     = "{\"mon\": {\"start\": 8, \"stop\": 20},\"tue\": {\"start\": 8, \"stop\": 20},\"wed\": {\"start\": 8, \"stop\": 20},\"thu\": {\"start\": 8, \"stop\": 20}, \"fri\": {\"start\": 8, \"stop\": 20}}"
+variable "ec2_schedule" {
+  default     = "{\"mon\": {\"start\": 6, \"stop\": 19},\"tue\": {\"start\": 6, \"stop\": 19},\"wed\": {\"start\": 6, \"stop\": 19},\"thu\": {\"start\": 6, \"stop\": 19}, \"fri\": {\"start\": 6, \"stop\": 19}}"
+  description = "the default schedule tag containing json schedule information to add to instance when schedule_tag_force set to true."
+}
+
+variable "rds_schedule" {
+  default     = "{\"mon\": {\"start\": 5, \"stop\": 19},\"tue\": {\"start\": 5, \"stop\": 19},\"wed\": {\"start\": 5, \"stop\": 19},\"thu\": {\"start\": 5, \"stop\": 19}, \"fri\": {\"start\": 5, \"stop\": 19}}"
   description = "the default schedule tag containing json schedule information to add to instance when schedule_tag_force set to true."
 }
 
@@ -34,13 +39,13 @@ variable "time" {
   description = "timezone to use for scheduler. Can be 'local', 'gmt' or an Olson timezone from https://gist.github.com/ykessler/3349954. default is 'gmt'. local time is for the AWS region."
 }
 
-variable "ec2_schedule" {
+variable "ec2_scheduling_enabled" {
   type        = string
   default     = "true"
   description = "Whether to do scheduling for EC2 instances."
 }
 
-variable "rds_schedule" {
+variable "rds_scheduling_enabled" {
   type        = string
   default     = "true"
   description = "Whether to do scheduling for RDS instances."
