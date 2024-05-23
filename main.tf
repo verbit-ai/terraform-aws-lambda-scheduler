@@ -48,6 +48,13 @@ data "aws_iam_policy_document" "ec2-access-scheduler" {
       "rds:StopDBInstance",
       "rds:ListTagsForResource",
       "rds:AddTagsToResource",
+      "kms:RetireGrant",
+      "kms:CreateGrant",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Encrypt",
+      "kms:DescribeKey",
+      "kms:Decrypt"
     ]
     resources = [
       "*",
